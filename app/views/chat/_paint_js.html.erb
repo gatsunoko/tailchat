@@ -1,0 +1,135 @@
+<%= javascript_tag do %>
+    window.j_web_paint_channel = '<%= j webpaintchannel %>';
+    window.j_web_my_channel = '<%= j webmychannel %>';
+<% end %>
+
+<script>
+    var ws_rails = new WebSocketRails("ws://192.168.33.10:3000//websocket");
+    var websocket_paint_channel = ws_rails.subscribe(j_web_paint_channel);
+    var web_my_channel = ws_rails.subscribe(j_web_my_channel);
+
+    $(function() {
+        var canvas = document.getElementById('mycanvas');
+        if (!canvas || !canvas.getContext) return false;
+
+        var ctx = canvas.getContext('2d');
+
+        var startX,
+            startY,
+            x,
+            y,
+            tranX,
+            tranY,
+            borderWidth = 20,
+            isDrawing = false;
+
+        $('#mycanvas').mousedown(function(e) {
+            isDrawing = true;
+            startX = e.pageX - $(this).offset().left - borderWidth;
+            startY = e.pageY - $(this).offset().top - borderWidth;
+
+            var msg = [ "mousedown", startX, startY, 0, 0 ];
+            ws_rails.trigger("websocket_paint_event", msg);
+        })
+        .mousemove(function(e) {
+            if (!isDrawing) return;
+            x = e.pageX - $(this).offset().left - borderWidth;
+            y = e.pageY - $(this).offset().top - borderWidth;
+            ctx.beginPath();
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(x, y);
+            ctx.stroke();
+            tranX = startX;
+            tranY = startY;
+            startX = x;
+            startY = y;
+
+            var msg = [ "mousemove", tranX, tranY, x, y ];
+            ws_rails.trigger("websocket_paint_event", msg);
+        })
+        .mouseup(function(e) {
+            isDrawing = false;
+            x = e.pageX - $(this).offset().left - borderWidth;
+            y = e.pageY - $(this).offset().top - borderWidth;
+            ctx.beginPath();
+            ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI / 180, true);
+            ctx.fill();
+            startX = x;
+            startY = y;
+
+            var msg = [ "mouseup", x, y, 0, 0 ];
+            ws_rails.trigger("websocket_paint_event", msg);
+        })
+        .mouseleave(function() {
+            isDrawing = false;
+        });
+
+        $("#penWidth").change(function() {
+            ctx.lineWidth = $(this).val();
+
+            var msg = [ "penWidth", ctx.lineWidth, 0, 0, 0 ];
+            ws_rails.trigger("websocket_paint_event", msg);
+        });
+       
+        $('li').click(function() {
+            ctx.strokeStyle = $(this).css('background-color');
+            ctx.fillStyle = $(this).css('background-color');
+
+            var msg = [ "pencoler", ctx.strokeStyle, ctx.fillStyle, 0, 0 ];
+            ws_rails.trigger("websocket_paint_event", msg);
+        });
+
+        $("#erase").click(function() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            var msg = [ "erase", 0, 0, 0, 0 ];
+            ws_rails.trigger("websocket_paint_event", msg);
+        });
+
+        $("#gamestart").click(function() {
+            var msg = [ "gamestart", 0, 0, 0, 0 ];
+            ws_rails.trigger("websocket_gamestart_event", msg);
+        });
+
+    });
+
+    var saveline,
+        relineW;
+
+    websocket_paint_channel.bind("websocket_paint_mouse", function(message){
+        var canvas = document.getElementById('mycanvas');
+        if (!canvas || !canvas.getContext) return false;
+        var ctx = canvas.getContext('2d');
+
+        if (message[0] == "mousedown"){
+            //なし
+        } else if (message[0] == "mousemove"){
+            saveline = ctx.lineWidth;
+            ctx.lineWidth = relineW;
+            ctx.beginPath();
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+            ctx.moveTo(message[1], message[2]);
+            ctx.lineTo(message[3], message[4]);
+            ctx.stroke();
+            ctx.lineWidth = saveline;
+        } else if (message[0] == "mouseup"){
+            ctx.beginPath();
+            ctx.arc(message[1], message[2], ctx.lineWidth / 2, 0, Math.PI / 180, true);
+            ctx.fill();
+        } else if (message[0] == "erase"){
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        } else if (message[0] == "penWidth"){
+            relineW = message[1];
+        } else if (message[0] == "pencoler"){
+            ctx.strokeStyle = message[1];
+            ctx.fillStyle = message[2];
+        }
+    })
+    
+    web_my_channel.bind("gamestart", function(message){
+        alert("aaaa");
+    })
+</script>

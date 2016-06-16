@@ -1,0 +1,49 @@
+<%= javascript_tag do %>
+    window.j_web_channel = '<%= j webchannel %>';
+    window.j_web_user_channel = '<%= j @webuserchannel %>';
+<% end %>
+
+<script>
+  //var ws_rails = new WebSocketRails("ws://192.168.33.10:3000//websocket");
+  var websocket_chat_channel = ws_rails.subscribe(j_web_channel);
+  var websocket_user_channel = ws_rails.subscribe(j_web_user_channel);
+
+  // ページ読み込み時に実行したい処理
+  window.onload = function(){
+    // 現在の縦スクロール位置
+    var scrollPosition = document.getElementById("chat_area").scrollTop;
+    // スクロール要素の高さ
+    var scrollHeight = document.getElementById("chat_area").scrollHeight;
+    document.getElementById("chat_area").scrollTop = scrollHeight;
+    //残り文字数を表示
+    document.getElementById('characnt').value = 50;
+  }
+
+  // メッセージ受信時の処理
+  //ws_rails.bind("websocket_chat", function(message){
+  websocket_chat_channel.bind("websocket_chat", function(message){
+    var message_li = document.createElement("li");
+    message_li.textContent = message;
+    document.getElementById("chat_area").appendChild(message_li);
+
+    // 現在の縦スクロール位置
+    var scrollPosition = document.getElementById("chat_area").scrollTop;
+    // スクロール要素の高さ
+    var scrollHeight = document.getElementById("chat_area").scrollHeight;
+    document.getElementById("chat_area").scrollTop = scrollHeight;
+  })
+
+  // メッセージ送信時の処理
+  document.getElementById("send").onclick =  function(){
+    transmission()
+　　}
+
+  function transmission(){
+    if (document.getElementById("comment").value != ""){
+      var comment = document.getElementById("comment").value;
+      ws_rails.trigger("websocket_chat", comment);
+      //websocket_chat_channel.trigger("websocket_chat", comment);
+      document.getElementById("comment").value = "";
+    }
+  }
+</script>

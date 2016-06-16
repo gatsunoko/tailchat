@@ -1,0 +1,17 @@
+<% unless current_user.nil? %>
+  <% session[:id] = current_user.id %>
+  <% session[:username] = current_user.username %>
+<% else %>
+  <% session[:id] = nil %>
+  <% session[:username] = "名無し" %>
+<% end -%>
+<br>
+<% room_num = 1 %>
+<% @paintroom.each do |paintroom| %>
+  <%= link_to "部屋" + room_num.to_s, chat_path(paintroom), class: :room_name %><br><br>
+  <% room_num = room_num + 1 %>
+<% end -%>
+
+<ul id="user_area">
+	
+</ul>

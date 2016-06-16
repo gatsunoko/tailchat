@@ -1,0 +1,93 @@
+<% unless current_user.nil? %>
+  <% session[:id] = current_user.id %>
+  <% session[:username] = current_user.username %>
+<% else %>
+  <% session[:id] = nil %>
+  <% session[:username] = "名無し" %>
+<% end -%>
+
+<div id="penconfig">
+  <select id="penWidth">
+    <option value="1">細</option>
+    <option value="3">中</option>
+    <option value="5">太</option>
+  </select>
+
+  <ul id="ulColer">
+    <li class="selectColer" style="background-color:#000"></li>
+    <li class="selectColer" style="background-color:#f00"></li>
+    <li class="selectColer" style="background-color:#0f0"></li><br>
+    <li class="selectColer" style="background-color:#00f"></li>
+    <li class="selectColer" style="background-color:#5C3800"></li>
+    <li class="selectColer" style="background-color:#ff0"></li><br>
+    <li class="selectColer" style="background-color:#FF00D8"></li>
+    <li class="selectColer" style="background-color:#ffffff"></li>
+  </ul>
+
+  <input type="button" id="erase" value="消去">
+
+  <p id="user_list">1</p>
+</div>
+
+<input type="button" id="gamestart" value="すたーと">
+
+<canvas id="mycanvas" width="600" height="400">Canvasに対応したブラウザを使用してください。</canvas>
+
+<%= render 'paint_js', webpaintchannel: @webpaintchannel, webmychannel: @webmychannel %>
+
+<ul id="chat_area">
+  <% unless @chatlogs.nil? %>
+    <% @chatlogs.each do |chatlog| %>
+      <li><% unless chatlog.user.nil? %>
+            <%= chatlog.user.username %> : <%= chatlog.text %>
+          <% else %>
+            名無し : <%= chatlog.text %>
+          <% end -%>
+      </li>
+    <% end -%>
+  <% end -%>
+</ul>
+
+<input id="comment" type="text" onkeydown="if(event.keyCode == 13){javascript:transmission();}" onkeyup="document.getElementById('characnt').value=50 - this.value.length" maxlength='50'>
+<input id="send" type="button" value="send"><br>
+<input type="text" id="characnt" disabled="disabled">
+<%= render 'chat_js', webchannel: @webchannel, webuserchannel: @webuserchannel%>
+
+<% unless @roomstates.nil? %>
+  <% @roomstates.each do |roomstate| %>
+    <%= roomstate.username %><br>
+  <% end -%>
+<% end -%>
+
+<script>
+  window.onload = function(){
+    ws_rails.trigger("websocket_online", 1);
+  }
+
+  window.onbeforeunload = function(event){
+    ws_rails.trigger("websocket_online", 0);
+    //event = event || window.event; 
+    //event.returnValue = 'ページから移動しますか？';
+  }
+
+  //他ユーザー情報受信時
+  websocket_user_channel.bind("websocket_user_channel", function(message){
+    //alert(message[0]);
+    var message_li = document.createElement("li");
+    if (message[0] == 0){
+      message_li.textContent = message[1] + "が退室しました。";
+      document.getElementById("chat_area").appendChild(message_li);
+      document.getElementById('user_list').innerHTML=message[2];
+    }else{
+      message_li.textContent = message[1] + "が入室しました。";
+      document.getElementById("chat_area").appendChild(message_li);
+      document.getElementById('user_list').innerHTML=message[2];
+    }
+
+    // 現在の縦スクロール位置
+    var scrollPosition = document.getElementById("chat_area").scrollTop;
+    // スクロール要素の高さ
+    var scrollHeight = document.getElementById("chat_area").scrollHeight;
+    document.getElementById("chat_area").scrollTop = scrollHeight;
+  })
+</script>

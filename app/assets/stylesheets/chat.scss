@@ -1,0 +1,61 @@
+// Place all the styles related to the chat controller here.
+// They will automatically be included in application.css.
+// You can use Sass (SCSS) here: http://sass-lang.com/
+
+li{
+	list-style-type: none;
+}
+ul{
+	padding-left: 10px;
+}
+.room_name{
+  margin: 10px;
+}
+
+#mycanvas{
+  border: solid 20px #999;
+  cursor: crosshair;
+}
+#ulColer {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+.selectColer {
+    cursor:pointer;
+    cursor:hand;
+    display:inline-block;
+    border: 1px solid #000;
+    width: 50px;
+    height: 50px;
+}
+#penconfig{
+  border: solid 1px;
+  width: 180px;
+  float: right;
+}
+#erase {
+  width: 100px;
+  height: 50px;
+}
+#penWidth {
+  width: 100px;
+}
+
+#user_list{
+  /*float: right;*/
+}
+
+#chat_area{
+  overflow-x: auto;   /* スクロール表示 */ 
+  width: 800px;
+  height: 200px;
+  border: solid 1px;
+}
+#comment{
+  width: 600px;
+}
+#characnt{
+  border: none;
+  background-color: white;
+}

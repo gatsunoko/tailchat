@@ -1,0 +1,3 @@
+class TailchatsController < ApplicationController
+
+end
